@@ -84,6 +84,29 @@ agent-skills/
 
 发现新的好用 skill?去 [ai-skill-hub Issues](https://github.com/JiahaoLin2018/ai-skill-hub/issues) 提建议。
 
+## Contributors
+
+<table>
+<tr>
+<td align="center" width="160">
+<a href="https://github.com/JiahaoLin2018">
+<img src="https://github.com/JiahaoLin2018.png" width="80" alt="JiahaoLin2018" /><br/>
+<b>JiahaoLin2018</b>
+</a><br/>
+<sub>skill 开发 · workshop 维护</sub>
+</td>
+<td align="center" width="160">
+<a href="https://claude.com/claude-code">
+<img src="https://github.com/anthropics.png" width="80" alt="Claude Code" /><br/>
+<b>Claude Code</b>
+</a><br/>
+<sub>skill 调研 · 文档优化</sub>
+</td>
+</tr>
+</table>
+
+> Claude 通过 commits 中的 `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>` trailer 协作参与。
+
 ## License
 
 MIT — 详见 [LICENSE](./LICENSE)。
