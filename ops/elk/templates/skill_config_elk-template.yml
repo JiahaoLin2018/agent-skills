@@ -1,0 +1,74 @@
+# ELK Analyzer 配置文件 — 复制到 ~/.claude/skill_config_elk.yml
+#
+# 快速上手：
+#   1. 填写 connections（ES 连接信息）
+#   2. 调整 defaults（默认环境和索引）
+#   3. 在 projects 中添加你的项目
+#   4. 使用 /elk ping 验证连接，/elk indices 查看现有索引名称
+#
+# ⚠ 重要：这里连接的是 ELK 日志库（存储应用运行日志），不是业务数据库。
+#   日志通过 Logstash/Filebeat 从应用服务器采集后写入 Elasticsearch，
+#   本工具用于查询和分析这些日志。
+
+# ─── connections ───────────────────────────────────────────────
+# ES 连接配置。每个连接对应一个 Elasticsearch 集群。
+#
+# 如何获取连接地址：
+#   - 找运维/DevOps 同事获取 Elasticsearch 的访问地址和账号
+#   - 或在 Kibana 界面 → Management → Stack Monitoring 中查看集群地址
+#   - 地址格式：http://<host>:<port>，默认端口 9200
+#
+# 参数说明：
+#   uri      — Elasticsearch 访问地址（含协议和端口）
+#   username — ES 登录用户名（通常为 elastic 或运维分配的只读账号）
+#   password — ES 登录密码（建议配置后执行 chmod 600 保护此文件）
+connections:
+  prod:
+    uri: http://YOUR_PROD_ES_HOST:9200    # 由运维/DevOps 提供
+    username: elastic
+    password: <your-password>
+
+  uat:
+    uri: http://YOUR_UAT_ES_HOST:9200     # 由运维/DevOps 提供
+    username: elastic
+    password: <your-password>
+
+# ─── defaults ──────────────────────────────────────────────────
+# 默认查询参数。未在查询中指定环境/索引时使用这些默认值。
+#
+# 参数说明：
+#   prod_connection — 生产环境使用的连接名（对应上方 connections 中的 key）
+#   prod_index      — 生产环境默认索引模式（支持通配符 *）
+#   uat_connection  — 测试环境使用的连接名
+#   uat_index       — 测试环境默认索引模式
+#   default_env     — 未指定环境时的默认值（prod 或 uat）
+defaults:
+  prod_connection: prod
+  prod_index: app-prod-*
+  uat_connection: uat
+  uat_index: app-uat-*
+  default_env: prod
+
+# ─── projects ──────────────────────────────────────────────────
+# 项目配置。每个项目可指定独立的连接和索引，查询时按项目名自动切换。
+# 使用 /elk indices 可查看 ES 中实际存在的索引名称，帮助你填写正确的索引模式。
+#
+# 参数说明：
+#   name_zh         — 项目中文名（用于显示）
+#   aliases         — 别名列表，逗号分隔（支持中文/缩写，用于模糊匹配）
+#   description     — 项目简要描述
+#   prod_connection — 该项目生产环境使用的连接名
+#   prod_index      — 该项目生产环境的日志索引模式
+#   uat_connection  — 该项目测试环境使用的连接名
+#   uat_index       — 该项目测试环境的日志索引模式
+projects:
+
+  # 示例项目（取消注释并修改为你的实际项目）：
+  # my-service:
+  #   name_zh: "我的服务"
+  #   aliases: "myservice,我的服务,my"
+  #   description: "服务描述"
+  #   prod_connection: prod
+  #   prod_index: app-prod-*
+  #   uat_connection: uat
+  #   uat_index: app-uat-*

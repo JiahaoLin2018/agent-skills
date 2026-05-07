@@ -1,0 +1,22 @@
+[
+  {"query": "帮我查一下 my-service 项目最近1小时的错误日志，看看有没有 NullPointerException", "should_trigger": true},
+  {"query": "线上服务今天上午一直报超时，帮我看看 ES 里面的日志，是哪个接口出的问题", "should_trigger": true},
+  {"query": "我想追踪一下这个 traceId: a]b3c4d5e6f7 的完整调用链，看看请求经过了哪些服务", "should_trigger": true},
+  {"query": "order-service 测试环境最近30分钟有没有通知失败的日志", "should_trigger": true},
+  {"query": "帮我统计一下今天各个服务实例的 ERROR 日志数量，看看是不是某台机器有问题", "should_trigger": true},
+  {"query": "昨天下午3点到5点 app-prod 索引里有一波异常，帮我查一下是什么原因", "should_trigger": true},
+  {"query": "ELK 集群连通性检查一下，我怀疑 ES 挂了", "should_trigger": true},
+  {"query": "看看目前 Elasticsearch 里都有哪些索引可以查", "should_trigger": true},
+  {"query": "最近有没有 feign 调用超时的报错日志，可能是下游服务挂了", "should_trigger": true},
+  {"query": "my-service uat 环境查一下最近有没有用户登录失败的日志记录", "should_trigger": true},
+  {"query": "帮我写一个 Python 脚本解析 JSON 格式的日志文件，按时间排序后输出到 CSV", "should_trigger": false},
+  {"query": "我们的 MySQL 数据库慢查询太多了，帮我优化一下这几条 SQL 语句", "should_trigger": false},
+  {"query": "帮我搭建一个 ELK Stack，需要 docker-compose 配置文件，包含 Elasticsearch、Logstash 和 Kibana", "should_trigger": false},
+  {"query": "我想在 Kibana 里创建一个 dashboard，展示每日错误趋势图，怎么操作", "should_trigger": false},
+  {"query": "帮我写一个 Logstash 的 pipeline 配置，把 Nginx 访问日志解析后写入 ES", "should_trigger": false},
+  {"query": "我有一个 Spring Boot 项目，想接入 SLF4J + Logback，日志格式怎么配比较好", "should_trigger": false},
+  {"query": "帮我查一下这个 GitLab issue #234 的详细信息，看看分配给谁了", "should_trigger": false},
+  {"query": "我想在项目里加一个全局异常处理器，捕获所有未处理的异常并返回统一的错误响应", "should_trigger": false},
+  {"query": "服务器的 /var/log/syslog 文件太大了，帮我写个 logrotate 配置来自动轮转", "should_trigger": false},
+  {"query": "帮我分析一下这个 Java 堆转储文件 heap.hprof，看看哪里内存泄漏了", "should_trigger": false}
+]
