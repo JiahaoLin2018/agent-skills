@@ -94,7 +94,7 @@ def burn_forecast(entry, now_ts, window_sec):
     rate = pct / elapsed                      # 每秒消耗的百分比
     exhaust_in = (100 - pct) / rate           # 预计耗尽还需秒数
     if exhaust_in >= remain:
-        return ("✓ 够用", C["green"])
+        return ("✅ 够用", C["green"])
     return (f"⚠ {fmt_duration(exhaust_in)}", C["red"])
 
 
