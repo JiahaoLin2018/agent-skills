@@ -245,9 +245,9 @@ def render(data, now):
     # S×N = 会话累计 LLM 调用次数；🔧N = 会话累计工具调用次数
     line1.append(f"{C['green']}S×{session_total} 🔧{tool_count}{C['reset']}")
 
-    project = (data.get("workspace") or {}).get("project_dir", "")
-    if project:
-        line1.append(f"{C['green']}📁{os.path.basename(project)}{C['reset']}")
+    cwd = (data.get("workspace") or {}).get("current_dir", "")
+    if cwd:
+        line1.append(f"{C['green']}📁 {os.path.basename(cwd)}{C['reset']}")
 
     # ── Line 2: 5h bar 燃尽预测 重置时刻 │ 7d bar 重置日期 ──
     line2 = []

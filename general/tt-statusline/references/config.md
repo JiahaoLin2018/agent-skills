@@ -3,7 +3,7 @@
 ## 示例效果
 
 ```
-Opus 4.7 (1M context) Max │ ◔33% 334k │ S×2 🔧172 │ 📁jiahao
+Opus 4.7 (1M context) Max │ ◔33% 334k │ S×2 🔧172 │ 📁 jiahao
 5h █████░░░ 63% ✅ 够用 (1h46m · 17:00) │ 7d █░░░░░░░ 12% (4d16h · 05/23 08:00)
 ⏮️ S×0 -- │ ⏯️ S×2 5k │ ⚡329k 99% │ $11.92 3.6/h │ 3h17m
 ```
@@ -19,7 +19,7 @@ Opus 4.7 (1M context) Max │ ◔33% 334k │ S×2 🔧172 │ 📁jiahao
 | `334k` | 当前上下文实际占用 token | `current_usage` 的 input + cache_creation + cache_read 求和 |
 | `S×2` | 会话累计 LLM 调用次数 | `tt-round-state.json → session_total` |
 | `🔧172` | 会话累计工具调用次数 | transcript 中 `tool_use` 出现次数 |
-| `📁jiahao` | 当前项目目录名 | `workspace.project_dir` basename |
+| `📁 jiahao` | 当前工作目录名 | `workspace.current_dir` basename |
 
 ---
 
@@ -58,7 +58,7 @@ Opus 4.7 (1M context) Max │ ◔33% 334k │ S×2 🔧172 │ 📁jiahao
 | `🔧` | 工具调用次数 |
 | `⏮️` / `⏯️` | 上一轮 / 当前轮 |
 | `⚡` | 缓存命中 |
-| `📁` | 项目目录 |
+| `📁` | 当前工作目录 |
 | `✅` / `⚠` | 5h 额度够用 / 燃尽预警 |
 
 ---
