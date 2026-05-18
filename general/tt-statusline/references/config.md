@@ -3,9 +3,9 @@
 ## 示例效果
 
 ```
-[Sonnet 4.6 | Max] │ ◔ 27% (270k) │ S×3 54k │ [jiahao]
-5h ██░░░░░░ 28% (2h0m · 12:00) │ 7d ░░░░░░░░ 2% (4d22h · 05/23 08:00)
-上轮 S×2 102 │ 本轮 S×1 105 │ Cached 53k │ $6.59 │ 2d16h
+Opus 4.7 (1M context) Max │ ◔30% 297k │ S×2 🔧164 │ 📁jiahao
+5h ████░░░░ 51% ✓够用 17:00 │ 7d █░░░░░░░ 11% 05/23
+↩S×0 -- │ ▶S×2 13k │ ⚡284k 96% │ $10.11 3.2/h │ 3h12m
 ```
 
 ---
@@ -14,12 +14,12 @@
 
 | 字段 | 说明 | 数据来源 |
 |------|------|---------|
-| `[Sonnet 4.6 \| Max]` | 当前模型 + 思考模式（Max/High/Normal） | `model.display_name` + `effort.level` |
-| `○/◔/◑/◕/● N%` | 上下文窗口占用率。图标随百分比变化：○<25% ◔<50% ◑<75% ◕<90% ●≥90%；颜色：绿<50% 黄<80% 红≥80% | `context_window.used_percentage` |
-| `(270k)` | 当前上下文实际占用 token 量（灰色括号，即百分比对应的绝对值） | `current_usage` 的 input + cache_creation + cache_read 求和 |
-| `S×3` | 本次会话累计 LLM 交互次数（每次 Stop 事件 +1） | `tt-round-state.json → session_total` |
-| `54k` | 本次会话累计 input tokens 总量 | `context_window.total_input_tokens` |
-| `[jiahao]` | 当前项目目录名 | `workspace.project_dir` basename |
+| `Opus 4.7 (1M context) Max` | 模型名 + 思考模式（Max/High/Normal） | `model.display_name` + `effort.level` |
+| `◔30%` | 上下文窗口占用率。圆形图标随百分比变化：○<25% ◔<50% ◑<75% ◕<90% ●≥90%；颜色绿<50% 黄<80% 红≥80% | `context_window.used_percentage` |
+| `297k` | 当前上下文实际占用 token | `current_usage` 的 input + cache_creation + cache_read 求和 |
+| `S×2` | 会话累计 LLM 调用次数 | `tt-round-state.json → session_total` |
+| `🔧164` | 会话累计工具调用次数 | transcript 中 `tool_use` 出现次数 |
+| `📁jiahao` | 当前项目目录名 | `workspace.project_dir` basename |
 
 ---
 
@@ -27,25 +27,39 @@
 
 | 字段 | 说明 | 数据来源 |
 |------|------|---------|
-| `5h ██░░ 28%` | 5 小时窗口额度进度条 + 百分比 | `rate_limits.five_hour.used_percentage` |
-| `(2h0m · 12:00)` | 距重置剩余时间 + 重置时刻（跨天显示 mm/dd HH:MM） | `rate_limits.five_hour.resets_at` |
-| `7d ░░░░ 2%` | 7 天窗口额度进度条 + 百分比 | `rate_limits.seven_day.used_percentage` |
-| `(4d22h · 05/23 08:00)` | 距重置剩余时间 + 重置时刻 | `rate_limits.seven_day.resets_at` |
+| `5h ████░░░░ 51%` | 5 小时窗口额度进度条 + 百分比 | `rate_limits.five_hour.used_percentage` |
+| `✓够用` / `⚠2h` | 燃尽预测：按消耗速率推算 5h 额度够不够用到重置。够用为绿色，会提前耗尽则红色 `⚠`+预计剩余时间 | 派生：used% ÷ 已用窗口时间 |
+| `17:00` | 5h 窗口重置时刻 | `rate_limits.five_hour.resets_at` |
+| `7d █░░░░░░░ 11%` | 7 天窗口额度进度条 + 百分比 | `rate_limits.seven_day.used_percentage` |
+| `05/23` | 7 天窗口重置日期 | `rate_limits.seven_day.resets_at` |
 
 ---
 
-## 第 3 行 — 轮次对比
+## 第 3 行 — 轮次 / 缓存 / 成本
 
 | 字段 | 说明 | 数据来源 |
 |------|------|---------|
-| `上轮 S×2 102` | 上一轮：LLM 交互次数 + 那一轮新增 input tokens | `tt-round-state.json → prev / prev_round_tokens` |
-| `本轮 S×1 105` | 当前轮：LLM 交互次数 + 本轮新增 input tokens | `tt-round-state.json → current / curr_round_tokens` |
-| `Cached 53k` | 当前调用命中 prompt cache 的 tokens 数 | `context_window.current_usage.cache_read_input_tokens` |
-| `$6.59` | 本次会话累计费用（USD） | `cost.total_cost_usd` |
-| `2d16h` | 本次会话已运行时长 | `cost.total_duration_ms` |
+| `↩S×0 --` | 上一轮：LLM 调用次数 + 那一轮新增 input token（无数据显示 `--`） | `tt-round-state.json → prev` |
+| `▶S×2 13k` | 当前轮：LLM 调用次数 + 本轮新增 input token | `tt-round-state.json → current` |
+| `⚡284k 96%` | 缓存命中：命中的 token 量 + 命中率 | `current_usage.cache_read_input_tokens` |
+| `$10.11 3.2/h` | 会话累计费用 + 消耗速率（美元/小时） | `cost.total_cost_usd` ÷ 会话小时数 |
+| `3h12m` | 会话已运行时长 | `cost.total_duration_ms` |
 
 > **"轮"的定义**：用户发送一条消息 → Claude 完成所有响应（含工具调用）为止算一轮。
 > 轮次检测：读取 transcript JSONL 中 `last-prompt` 条目数变化来判断。
+
+---
+
+## 图标含义
+
+| 图标 | 含义 |
+|------|------|
+| `○ ◔ ◑ ◕ ●` | 上下文占用率（随百分比变化的圆形进度） |
+| `🔧` | 工具调用次数 |
+| `↩` / `▶` | 上一轮 / 当前轮 |
+| `⚡` | 缓存命中 |
+| `📁` | 项目目录 |
+| `✓` / `⚠` | 5h 额度够用 / 燃尽预警 |
 
 ---
 
@@ -53,14 +67,14 @@
 
 | 颜色 | ANSI | 用途 |
 |------|------|------|
-| 青色 | 38;5;117 | 模型名称 |
-| 绿色 | 38;5;114 | 项目名 / 上下文使用率<50% / 轮次标签 |
+| 青色 | 38;5;117 | 模型名称 / 缓存命中 |
+| 绿色 | 38;5;114 | 上下文使用率<50% / 调用计数 / 轮次 / ✓够用 |
 | 黄色 | 38;5;221 | 使用率 50–80% |
-| 红色 | 38;5;204 | 使用率 ≥80% |
+| 红色 | 38;5;204 | 使用率 ≥80% / ⚠ 燃尽预警 |
 | 蓝色 | 38;5;111 | 速率限制标签（5h / 7d） |
-| 橙色 | 38;5;216 | Token 数量 |
+| 橙色 | 38;5;216 | 轮次 token |
 | 洋红 | 38;5;213 | 费用 |
-| 灰色 | 38;5;244 | 时长 / 无数据占位符 |
+| 灰色 | 38;5;244 | 时长 / 重置时刻 / 派生指标 / 占位符 |
 
 ---
 
@@ -85,10 +99,14 @@
    - 方法 2：读取 transcript JSONL 中 `last-prompt` 条目数，增加则判定为新轮
    - 两种方式都必须在同一处更新 `last_prompt_count`，否则会导致重复触发
 
-3. **token 累计规则**：`total_input_tokens` 是本次会话累计值（可用）；`total_output_tokens` 只是当前调用的值（非累计），不用于轮次 delta 计算。
+3. **token 字段说明**：`total_input_tokens` 并非会话累计值——实测它精确等于当前上下文输入（`current_usage` 输入侧求和）；`total_output_tokens` 同理只是单次调用值。脚本不依赖二者做累计统计。
 
-4. **Windows 编码**：脚本开头 `sys.stdout.reconfigure(encoding="utf-8")` 处理 Windows GBK 默认编码问题。
+4. **transcript 单次扫描**：`scan_transcript` 一次遍历同时统计 `last-prompt`（轮次）和 `tool_use`（工具调用次数），避免重复读取大文件。
 
-5. **状态文件写入**：使用 `tempfile.mkstemp` + `os.replace` 原子写入，避免并发读写损坏。
+5. **派生指标**：燃尽预测、缓存命中率、消耗速率均由现有字段实时计算，不额外存储。燃尽预测在 5h 窗口刚重置（已用时间不足 10 分钟，速率不稳）或 `used%=0` 时不显示。
 
-6. **规避 token-tracker 覆盖**：脚本 `__version__` 固定为 `"1.5"`。token-tracker 的 `tt` 命令（如 `tt daily`）运行前会检查 `~/.claude/tt-statusline.py` 的 `__version__`，与其内置 `HOOK_VERSION` 不一致就用自带脚本覆盖本文件。保持 `"1.5"` 即可避免；该字段仅为标记，脚本逻辑不读取。
+6. **Windows 编码**：脚本开头 `sys.stdout.reconfigure(encoding="utf-8")` 处理 Windows GBK 默认编码问题。
+
+7. **状态文件写入**：使用 `tempfile.mkstemp` + `os.replace` 原子写入，避免并发读写损坏。
+
+8. **规避 token-tracker 覆盖**：脚本 `__version__` 固定为 `"1.5"`。token-tracker 的 `tt` 命令（如 `tt daily`）运行前会检查 `~/.claude/tt-statusline.py` 的 `__version__`，与其内置 `HOOK_VERSION` 不一致就用自带脚本覆盖本文件。保持 `"1.5"` 即可避免；该字段仅为标记，脚本逻辑不读取。

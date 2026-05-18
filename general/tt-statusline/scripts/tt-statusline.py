@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Claude Code statusLine — token tracker 状态栏（自定义版，实际 v2.5）"""
+"""Claude Code statusLine — token tracker 状态栏（自定义版，实际 v2.6）"""
 # __version__ 必须固定为 "1.5"：token-tracker 的 needs_update() 读此字段，
 # 与其内置 HOOK_VERSION("1.5") 不一致时会用自带脚本覆盖本文件（tt daily 等命令触发）。
 __version__ = "1.5"
@@ -68,33 +68,56 @@ def fmt_duration(seconds):
     return f"{int(seconds)}s"
 
 
-def fmt_reset(resets_at, now_ts):
+def fmt_reset_clock(resets_at, now_ts):
+    """重置时刻：当天显示 HH:MM，跨天显示 MM/DD。"""
     remain = int(resets_at) - now_ts
     if remain <= 0:
         return ""
     dt = datetime.fromtimestamp(int(resets_at))
-    clock = dt.strftime("%H:%M") if remain < 86400 else dt.strftime("%m/%d %H:%M")
-    return f"{fmt_duration(remain)} · {clock}"
+    return dt.strftime("%H:%M") if remain < 86400 else dt.strftime("%m/%d")
 
 
-def count_last_prompts(transcript_path):
-    """统计 transcript 中 last-prompt 条目数作为用户提问轮次。"""
+def burn_forecast(entry, now_ts, window_sec):
+    """限额燃尽预测：按已消耗速率推算是否会在重置前耗尽。
+    返回 (文案, 颜色)；窗口刚开始或数据不足时返回 None。"""
+    pct       = entry.get("used_percentage")
+    resets_at = entry.get("resets_at")
+    if not pct or not resets_at:
+        return None
+    remain = int(resets_at) - now_ts          # 距重置剩余秒数
+    if remain <= 0:
+        return None
+    elapsed = window_sec - remain             # 窗口已用秒数
+    if elapsed < 600:                         # 不足 10min，速率不稳，不预测
+        return None
+    rate = pct / elapsed                      # 每秒消耗的百分比
+    exhaust_in = (100 - pct) / rate           # 预计耗尽还需秒数
+    if exhaust_in >= remain:
+        return ("✓够用", C["green"])
+    return (f"⚠{fmt_duration(exhaust_in)}", C["red"])
+
+
+def scan_transcript(transcript_path):
+    """扫描 transcript：返回 (用户提问轮次, 工具调用次数)。
+    轮次 = last-prompt 条目数；工具调用 = tool_use 出现次数。"""
+    prompts = tools = 0
     if not transcript_path or not os.path.exists(transcript_path):
-        return 0
-    count = 0
+        return prompts, tools
     try:
         with open(transcript_path, encoding="utf-8", errors="replace") as f:
             for line in f:
                 if '"last-prompt"' in line:
-                    count += 1
+                    prompts += 1
+                tools += line.count('"type":"tool_use"')
     except Exception:
         pass
-    return count
+    return prompts, tools
 
 
-def update_round_state(session_id, total_in, transcript_path):
+def update_round_state(session_id, total_in, prompt_count):
     """
-    用 transcript last-prompt 计数检测新轮，维护状态。
+    用 transcript last-prompt 计数检测新轮，维护轮次状态。
+    prompt_count 由调用方传入（transcript 中 last-prompt 条目数）。
     返回 (prev_stops, curr_stops, session_total, prev_round_tokens, curr_round_tokens)
       - session_total    : 本次会话累计 LLM 调用次数
       - prev/curr_stops  : 上/本轮 LLM 调用次数
@@ -108,9 +131,7 @@ def update_round_state(session_id, total_in, transcript_path):
         state = {}
 
     # 检测新轮：方法1 flag 文件，方法2 transcript last-prompt 计数增加
-    # 必须在最前面获取，无论哪种方式触发都要同步更新，避免下一次 Stop 重复误判
     new_round = False
-    prompt_count = count_last_prompts(transcript_path)
 
     try:
         with open(NEW_ROUND_FLAG) as f:
@@ -188,87 +209,97 @@ def render(data, now):
     bar_w  = 8 if W >= 100 else 6 if W >= 60 else 4
     now_ts = int(now.timestamp())
 
-    total_in  = ctx.get("total_input_tokens")  or 0
-    total_out = ctx.get("total_output_tokens") or 0
-    total     = total_in + total_out
-
-    curr    = ctx.get("current_usage") or {}
-    turn_in = (curr.get("input_tokens") or 0) + (curr.get("cache_creation_input_tokens") or 0)
+    total_in = ctx.get("total_input_tokens") or 0
+    curr     = ctx.get("current_usage") or {}
+    turn_in  = (curr.get("input_tokens") or 0) + (curr.get("cache_creation_input_tokens") or 0)
 
     session_id      = data.get("session_id", "")
     transcript_path = data.get("transcript_path", "")
+    prompt_count, tool_count = scan_transcript(transcript_path)
 
     prev_stops, curr_stops, session_total, prev_round_tokens, curr_round_tokens = \
-        update_round_state(session_id, total_in, transcript_path)
+        update_round_state(session_id, total_in, prompt_count)
 
-    # ── Line 1: [Model | Effort] │ ◑ CTX% │ S×N Total │ [Project] ──
+    # ── Line 1: Model Effort │ ◔CTX% Tokens │ S×N 🔧N │ 📁Project ──
     line1 = []
 
     model_name = (data.get("model") or {}).get("display_name", "")
     effort     = (data.get("effort") or {}).get("level", "")
     if model_name:
-        inner = f"{model_name} | {effort.capitalize()}" if effort else model_name
-        line1.append(f"{C['cyan']}[{inner}]{C['reset']}")
+        label = f"{model_name} {effort.capitalize()}" if effort else model_name
+        line1.append(f"{C['cyan']}{label}{C['reset']}")
 
     ctx_pct = ctx.get("used_percentage")
     if ctx_pct is not None:
         circle = "○" if ctx_pct < 25 else "◔" if ctx_pct < 50 else "◑" if ctx_pct < 75 else "◕" if ctx_pct < 90 else "●"
-        seg = f"{color_by_pct(ctx_pct)}{circle} {ctx_pct:.0f}%{C['reset']}"
+        seg = f"{color_by_pct(ctx_pct)}{circle}{ctx_pct:.0f}%{C['reset']}"
         # 当前上下文实际占用 token = 本次请求输入侧总量（非缓存输入 + 缓存写入 + 缓存读取）
         ctx_tokens = ((curr.get("input_tokens") or 0)
                       + (curr.get("cache_creation_input_tokens") or 0)
                       + (curr.get("cache_read_input_tokens") or 0))
         if ctx_tokens > 0:
-            seg += f" {C['dim']}({fmt_tokens(ctx_tokens)}){C['reset']}"
+            seg += f" {C['dim']}{fmt_tokens(ctx_tokens)}{C['reset']}"
         line1.append(seg)
 
-    # S×N = 本次会话累计 LLM 调用次数
-    parts = [f"S×{session_total}"]
-    if total > 0:
-        parts.append(fmt_tokens(total))
-    line1.append(f"{C['green']}{' '.join(parts)}{C['reset']}")
+    # S×N = 会话累计 LLM 调用次数；🔧N = 会话累计工具调用次数
+    line1.append(f"{C['green']}S×{session_total} 🔧{tool_count}{C['reset']}")
 
     project = (data.get("workspace") or {}).get("project_dir", "")
     if project:
-        line1.append(f"{C['green']}[{os.path.basename(project)}]{C['reset']}")
+        line1.append(f"{C['green']}📁{os.path.basename(project)}{C['reset']}")
 
-    # ── Line 2: 5h / 7d rate limits + 倒计时 · 重置时间 ──
+    # ── Line 2: 5h bar 燃尽预测 重置时刻 │ 7d bar 重置日期 ──
     line2 = []
+    window = {"five_hour": 5 * 3600, "seven_day": 7 * 86400}
     for key, label in [("five_hour", "5h"), ("seven_day", "7d")]:
         entry = rl.get(key) or {}
         pct   = entry.get("used_percentage")
         if pct is None:
             continue
-        bar = progress_bar(pct, bar_w)
-        reset_str = ""
+        seg = f"{C['blue']}{label}{C['reset']} {progress_bar(pct, bar_w)}"
+        # 燃尽预测仅 5h 显示（7d 周期长，预测意义小）
+        if key == "five_hour":
+            fc = burn_forecast(entry, now_ts, window[key])
+            if fc:
+                seg += f" {fc[1]}{fc[0]}{C['reset']}"
         resets_at = entry.get("resets_at")
         if resets_at:
-            t = fmt_reset(resets_at, now_ts)
-            if t:
-                reset_str = f" {C['dim']}({t}){C['reset']}"
-        line2.append(f"{C['blue']}{label}{C['reset']} {bar}{reset_str}")
+            clock = fmt_reset_clock(resets_at, now_ts)
+            if clock:
+                seg += f" {C['dim']}{clock}{C['reset']}"
+        line2.append(seg)
 
-    # ── Line 3: 上轮 S×N Tok │ 本轮 S×N Tok │ Cached │ $cost │ dur ──
+    # ── Line 3: ↩上轮 │ ▶本轮 │ ⚡缓存 命中率 │ $费用 速率 │ 时长 ──
     line3 = []
 
-    prev_tok_str = fmt_tokens(prev_round_tokens) if prev_round_tokens > 0 else C["dim"] + "--" + C["reset"]
-    line3.append(
-        f"{C['green']}上轮 S×{prev_stops}{C['reset']} "
-        f"{C['peach']}{prev_tok_str}{C['reset']}"
-    )
+    prev_tok = fmt_tokens(prev_round_tokens) if prev_round_tokens > 0 else f"{C['dim']}--{C['reset']}"
+    line3.append(f"{C['green']}↩S×{prev_stops}{C['reset']} {C['peach']}{prev_tok}{C['reset']}")
 
     curr_tok = fmt_tokens(curr_round_tokens) if curr_round_tokens > 0 else fmt_tokens(turn_in)
-    line3.append(f"{C['green']}本轮 S×{curr_stops}{C['reset']} {C['peach']}{curr_tok}{C['reset']}")
+    line3.append(f"{C['green']}▶S×{curr_stops}{C['reset']} {C['peach']}{curr_tok}{C['reset']}")
 
+    # ⚡ 缓存命中：cache_read 量 + 命中率（cache_read 占输入侧总量比例）
     cache_read = curr.get("cache_read_input_tokens") or 0
+    ctx_in     = ((curr.get("input_tokens") or 0)
+                  + (curr.get("cache_creation_input_tokens") or 0)
+                  + cache_read)
     if cache_read > 0:
-        line3.append(f"{C['green']}Cached{C['reset']} {C['cyan']}{fmt_tokens(cache_read)}{C['reset']}")
+        seg = f"{C['cyan']}⚡{fmt_tokens(cache_read)}{C['reset']}"
+        if ctx_in > 0:
+            seg += f" {C['dim']}{cache_read / ctx_in * 100:.0f}%{C['reset']}"
+        line3.append(seg)
 
-    usd = cost.get("total_cost_usd")
-    if usd is not None:
-        line3.append(f"{C['magenta']}${usd:.2f}{C['reset']}")
-
+    # $ 费用 + 消耗速率（$/小时）
+    usd         = cost.get("total_cost_usd")
     duration_ms = cost.get("total_duration_ms")
+    if usd is not None:
+        seg = f"{C['magenta']}${usd:.2f}{C['reset']}"
+        if duration_ms and duration_ms > 0:
+            hours = duration_ms / 3_600_000
+            if hours > 0:
+                seg += f" {C['dim']}{usd / hours:.1f}/h{C['reset']}"
+        line3.append(seg)
+
     if duration_ms and duration_ms > 0:
         line3.append(f"{C['dim']}{fmt_duration(duration_ms / 1000)}{C['reset']}")
 
