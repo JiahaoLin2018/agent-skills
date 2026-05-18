@@ -68,13 +68,14 @@ def fmt_duration(seconds):
     return f"{int(seconds)}s"
 
 
-def fmt_reset_clock(resets_at, now_ts):
-    """重置时刻：当天显示 HH:MM，跨天显示 MM/DD。"""
+def fmt_reset(resets_at, now_ts):
+    """倒计时 · 重置时刻：当天显示 HH:MM，跨天显示 MM/DD HH:MM。"""
     remain = int(resets_at) - now_ts
     if remain <= 0:
         return ""
     dt = datetime.fromtimestamp(int(resets_at))
-    return dt.strftime("%H:%M") if remain < 86400 else dt.strftime("%m/%d")
+    clock = dt.strftime("%H:%M") if remain < 86400 else dt.strftime("%m/%d %H:%M")
+    return f"{fmt_duration(remain)} · {clock}"
 
 
 def burn_forecast(entry, now_ts, window_sec):
@@ -264,19 +265,19 @@ def render(data, now):
                 seg += f" {fc[1]}{fc[0]}{C['reset']}"
         resets_at = entry.get("resets_at")
         if resets_at:
-            clock = fmt_reset_clock(resets_at, now_ts)
-            if clock:
-                seg += f" {C['dim']}{clock}{C['reset']}"
+            t = fmt_reset(resets_at, now_ts)
+            if t:
+                seg += f" {C['dim']}({t}){C['reset']}"
         line2.append(seg)
 
-    # ── Line 3: ↩上轮 │ ▶本轮 │ ⚡缓存 命中率 │ $费用 速率 │ 时长 ──
+    # ── Line 3: ⏮上轮 │ ▶本轮 │ ⚡缓存 命中率 │ $费用 速率 │ 时长 ──
     line3 = []
 
     prev_tok = fmt_tokens(prev_round_tokens) if prev_round_tokens > 0 else f"{C['dim']}--{C['reset']}"
-    line3.append(f"{C['green']}↩S×{prev_stops}{C['reset']} {C['peach']}{prev_tok}{C['reset']}")
+    line3.append(f"{C['green']}⏮️ S×{prev_stops}{C['reset']} {C['peach']}{prev_tok}{C['reset']}")
 
     curr_tok = fmt_tokens(curr_round_tokens) if curr_round_tokens > 0 else fmt_tokens(turn_in)
-    line3.append(f"{C['green']}▶S×{curr_stops}{C['reset']} {C['peach']}{curr_tok}{C['reset']}")
+    line3.append(f"{C['green']}▶️ S×{curr_stops}{C['reset']} {C['peach']}{curr_tok}{C['reset']}")
 
     # ⚡ 缓存命中：cache_read 量 + 命中率（cache_read 占输入侧总量比例）
     cache_read = curr.get("cache_read_input_tokens") or 0

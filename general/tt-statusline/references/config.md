@@ -3,9 +3,9 @@
 ## 示例效果
 
 ```
-Opus 4.7 (1M context) Max │ ◔30% 297k │ S×2 🔧164 │ 📁jiahao
-5h ████░░░░ 51% ✓够用 17:00 │ 7d █░░░░░░░ 11% 05/23
-↩S×0 -- │ ▶S×2 13k │ ⚡284k 96% │ $10.11 3.2/h │ 3h12m
+Opus 4.7 (1M context) Max │ ◔33% 334k │ S×2 🔧172 │ 📁jiahao
+5h █████░░░ 63% ✓够用 (1h46m · 17:00) │ 7d █░░░░░░░ 12% (4d16h · 05/23 08:00)
+⏮️ S×0 -- │ ▶️ S×2 5k │ ⚡329k 99% │ $11.92 3.6/h │ 3h17m
 ```
 
 ---
@@ -15,10 +15,10 @@ Opus 4.7 (1M context) Max │ ◔30% 297k │ S×2 🔧164 │ 📁jiahao
 | 字段 | 说明 | 数据来源 |
 |------|------|---------|
 | `Opus 4.7 (1M context) Max` | 模型名 + 思考模式（Max/High/Normal） | `model.display_name` + `effort.level` |
-| `◔30%` | 上下文窗口占用率。圆形图标随百分比变化：○<25% ◔<50% ◑<75% ◕<90% ●≥90%；颜色绿<50% 黄<80% 红≥80% | `context_window.used_percentage` |
-| `297k` | 当前上下文实际占用 token | `current_usage` 的 input + cache_creation + cache_read 求和 |
+| `◔33%` | 上下文窗口占用率。圆形图标随百分比变化：○<25% ◔<50% ◑<75% ◕<90% ●≥90%；颜色绿<50% 黄<80% 红≥80% | `context_window.used_percentage` |
+| `334k` | 当前上下文实际占用 token | `current_usage` 的 input + cache_creation + cache_read 求和 |
 | `S×2` | 会话累计 LLM 调用次数 | `tt-round-state.json → session_total` |
-| `🔧164` | 会话累计工具调用次数 | transcript 中 `tool_use` 出现次数 |
+| `🔧172` | 会话累计工具调用次数 | transcript 中 `tool_use` 出现次数 |
 | `📁jiahao` | 当前项目目录名 | `workspace.project_dir` basename |
 
 ---
@@ -27,11 +27,11 @@ Opus 4.7 (1M context) Max │ ◔30% 297k │ S×2 🔧164 │ 📁jiahao
 
 | 字段 | 说明 | 数据来源 |
 |------|------|---------|
-| `5h ████░░░░ 51%` | 5 小时窗口额度进度条 + 百分比 | `rate_limits.five_hour.used_percentage` |
+| `5h █████░░░ 63%` | 5 小时窗口额度进度条 + 百分比 | `rate_limits.five_hour.used_percentage` |
 | `✓够用` / `⚠2h` | 燃尽预测：按消耗速率推算 5h 额度够不够用到重置。够用为绿色，会提前耗尽则红色 `⚠`+预计剩余时间 | 派生：used% ÷ 已用窗口时间 |
-| `17:00` | 5h 窗口重置时刻 | `rate_limits.five_hour.resets_at` |
-| `7d █░░░░░░░ 11%` | 7 天窗口额度进度条 + 百分比 | `rate_limits.seven_day.used_percentage` |
-| `05/23` | 7 天窗口重置日期 | `rate_limits.seven_day.resets_at` |
+| `(1h46m · 17:00)` | 距重置倒计时 · 重置时刻（跨天显示 `MM/DD HH:MM`） | `rate_limits.five_hour.resets_at` |
+| `7d █░░░░░░░ 12%` | 7 天窗口额度进度条 + 百分比 | `rate_limits.seven_day.used_percentage` |
+| `(4d16h · 05/23 08:00)` | 距重置倒计时 · 重置时刻 | `rate_limits.seven_day.resets_at` |
 
 ---
 
@@ -39,11 +39,11 @@ Opus 4.7 (1M context) Max │ ◔30% 297k │ S×2 🔧164 │ 📁jiahao
 
 | 字段 | 说明 | 数据来源 |
 |------|------|---------|
-| `↩S×0 --` | 上一轮：LLM 调用次数 + 那一轮新增 input token（无数据显示 `--`） | `tt-round-state.json → prev` |
-| `▶S×2 13k` | 当前轮：LLM 调用次数 + 本轮新增 input token | `tt-round-state.json → current` |
-| `⚡284k 96%` | 缓存命中：命中的 token 量 + 命中率 | `current_usage.cache_read_input_tokens` |
-| `$10.11 3.2/h` | 会话累计费用 + 消耗速率（美元/小时） | `cost.total_cost_usd` ÷ 会话小时数 |
-| `3h12m` | 会话已运行时长 | `cost.total_duration_ms` |
+| `⏮️ S×0 --` | 上一轮：LLM 调用次数 + 那一轮新增 input token（无数据显示 `--`） | `tt-round-state.json → prev` |
+| `▶️ S×2 5k` | 当前轮：LLM 调用次数 + 本轮新增 input token | `tt-round-state.json → current` |
+| `⚡329k 99%` | 缓存命中：命中的 token 量 + 命中率 | `current_usage.cache_read_input_tokens` |
+| `$11.92 3.6/h` | 会话累计费用 + 消耗速率（美元/小时） | `cost.total_cost_usd` ÷ 会话小时数 |
+| `3h17m` | 会话已运行时长 | `cost.total_duration_ms` |
 
 > **"轮"的定义**：用户发送一条消息 → Claude 完成所有响应（含工具调用）为止算一轮。
 > 轮次检测：读取 transcript JSONL 中 `last-prompt` 条目数变化来判断。
@@ -56,7 +56,7 @@ Opus 4.7 (1M context) Max │ ◔30% 297k │ S×2 🔧164 │ 📁jiahao
 |------|------|
 | `○ ◔ ◑ ◕ ●` | 上下文占用率（随百分比变化的圆形进度） |
 | `🔧` | 工具调用次数 |
-| `↩` / `▶` | 上一轮 / 当前轮 |
+| `⏮️` / `▶️` | 上一轮 / 当前轮 |
 | `⚡` | 缓存命中 |
 | `📁` | 项目目录 |
 | `✓` / `⚠` | 5h 额度够用 / 燃尽预警 |
@@ -74,7 +74,7 @@ Opus 4.7 (1M context) Max │ ◔30% 297k │ S×2 🔧164 │ 📁jiahao
 | 蓝色 | 38;5;111 | 速率限制标签（5h / 7d） |
 | 橙色 | 38;5;216 | 轮次 token |
 | 洋红 | 38;5;213 | 费用 |
-| 灰色 | 38;5;244 | 时长 / 重置时刻 / 派生指标 / 占位符 |
+| 灰色 | 38;5;244 | 时长 / 倒计时与重置时刻 / 派生指标 / 占位符 |
 
 ---
 
