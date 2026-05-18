@@ -213,7 +213,14 @@ def render(data, now):
     ctx_pct = ctx.get("used_percentage")
     if ctx_pct is not None:
         circle = "○" if ctx_pct < 25 else "◔" if ctx_pct < 50 else "◑" if ctx_pct < 75 else "◕" if ctx_pct < 90 else "●"
-        line1.append(f"{color_by_pct(ctx_pct)}{circle} {ctx_pct:.0f}%{C['reset']}")
+        seg = f"{color_by_pct(ctx_pct)}{circle} {ctx_pct:.0f}%{C['reset']}"
+        # 当前上下文实际占用 token = 本次请求输入侧总量（非缓存输入 + 缓存写入 + 缓存读取）
+        ctx_tokens = ((curr.get("input_tokens") or 0)
+                      + (curr.get("cache_creation_input_tokens") or 0)
+                      + (curr.get("cache_read_input_tokens") or 0))
+        if ctx_tokens > 0:
+            seg += f" {C['dim']}({fmt_tokens(ctx_tokens)}){C['reset']}"
+        line1.append(seg)
 
     # S×N = 本次会话累计 LLM 调用次数
     parts = [f"S×{session_total}"]
