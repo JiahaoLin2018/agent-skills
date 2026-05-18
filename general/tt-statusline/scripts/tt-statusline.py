@@ -210,7 +210,8 @@ def render(data, now):
 
     ctx_pct = ctx.get("used_percentage")
     if ctx_pct is not None:
-        line1.append(f"{color_by_pct(ctx_pct)}◑ {ctx_pct:.0f}%{C['reset']}")
+        circle = "○" if ctx_pct < 20 else "◔" if ctx_pct < 40 else "◑" if ctx_pct < 60 else "◕" if ctx_pct < 80 else "●"
+        line1.append(f"{color_by_pct(ctx_pct)}{circle} {ctx_pct:.0f}%{C['reset']}")
 
     # S×N = 本次会话累计 LLM 调用次数
     parts = [f"S×{session_total}"]
