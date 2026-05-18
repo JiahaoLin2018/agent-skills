@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""Claude Code statusLine — token tracker 状态栏"""
-__version__ = "2.4"
+"""Claude Code statusLine — token tracker 状态栏（自定义版，实际 v2.5）"""
+# __version__ 必须固定为 "1.5"：token-tracker 的 needs_update() 读此字段，
+# 与其内置 HOOK_VERSION("1.5") 不一致时会用自带脚本覆盖本文件（tt daily 等命令触发）。
+__version__ = "1.5"
 import json, os, re, sys, tempfile
 from datetime import datetime, timezone
 

@@ -89,3 +89,5 @@
 4. **Windows 编码**：脚本开头 `sys.stdout.reconfigure(encoding="utf-8")` 处理 Windows GBK 默认编码问题。
 
 5. **状态文件写入**：使用 `tempfile.mkstemp` + `os.replace` 原子写入，避免并发读写损坏。
+
+6. **规避 token-tracker 覆盖**：脚本 `__version__` 固定为 `"1.5"`。token-tracker 的 `tt` 命令（如 `tt daily`）运行前会检查 `~/.claude/tt-statusline.py` 的 `__version__`，与其内置 `HOOK_VERSION` 不一致就用自带脚本覆盖本文件。保持 `"1.5"` 即可避免；该字段仅为标记，脚本逻辑不读取。
