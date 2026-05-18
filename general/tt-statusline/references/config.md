@@ -3,7 +3,7 @@
 ## 示例效果
 
 ```
-[Sonnet 4.6 | Max] │ ◑ 27% │ S×3 54k │ [jiahao]
+[Sonnet 4.6 | Max] │ ◔ 27% │ S×3 54k │ [jiahao]
 5h ██░░░░░░ 28% (2h0m · 12:00) │ 7d ░░░░░░░░ 2% (4d22h · 05/23 08:00)
 上轮 S×2 102 │ 本轮 S×1 105 │ Cached 53k │ $6.59 │ 2d16h
 ```
@@ -15,7 +15,7 @@
 | 字段 | 说明 | 数据来源 |
 |------|------|---------|
 | `[Sonnet 4.6 \| Max]` | 当前模型 + 思考模式（Max/High/Normal） | `model.display_name` + `effort.level` |
-| `◑ 27%` | 上下文窗口占用率，绿 < 50%，黄 < 80%，红 ≥ 80% | `context_window.used_percentage` |
+| `○/◔/◑/◕/● N%` | 上下文窗口占用率，图标随百分比变化：○<25% ◔<50% ◑<75% ◕<90% ●≥90%；颜色：绿<50% 黄<80% 红≥80% | `context_window.used_percentage` |
 | `S×3` | 本次会话累计 LLM 交互次数（每次 Stop 事件 +1） | `tt-round-state.json → session_total` |
 | `54k` | 本次会话累计 input tokens 总量 | `context_window.total_input_tokens` |
 | `[jiahao]` | 当前项目目录名 | `workspace.project_dir` basename |
