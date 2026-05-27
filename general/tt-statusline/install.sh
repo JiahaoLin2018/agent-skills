@@ -38,7 +38,41 @@ with open(settings_file, "w", encoding="utf-8") as f:
 print("[tt-statusline] 已更新 settings.json statusLine 配置")
 PYEOF
 
-# 3. 在 on-prompt-submit.sh 末尾追加 flag 写入（如果尚未存在）
+# 3. 保存正确命令到配置文件（供 guard 脚本使用）
+echo "${STATUS_CMD}" > "${CLAUDE_DIR}/tt-statusline-cmd.conf"
+echo "[tt-statusline] 已保存 statusLine 命令到 tt-statusline-cmd.conf"
+
+# 4. 安装 guard 脚本并注册为 Stop hook（防止 tt setup 覆盖 settings.json）
+cp "${SKILL_DIR}/scripts/tt-statusline-guard.sh" "${HOOKS_DIR}/tt-statusline-guard.sh"
+chmod +x "${HOOKS_DIR}/tt-statusline-guard.sh"
+echo "[tt-statusline] 已安装 tt-statusline-guard.sh"
+
+GUARD_CMD="bash ~/.claude/hooks/tt-statusline-guard.sh"
+python3 - <<PYEOF
+import json, os
+
+settings_file = os.path.expanduser("~/.claude/settings.json")
+with open(settings_file, encoding="utf-8") as f:
+    cfg = json.load(f)
+
+stop_hooks = cfg.setdefault("hooks", {}).setdefault("Stop", [])
+guard_cmd = "${GUARD_CMD}"
+
+already = any(
+    h.get("command") == guard_cmd
+    for entry in stop_hooks
+    for h in entry.get("hooks", [])
+)
+if not already:
+    stop_hooks.append({"matcher": "", "hooks": [{"type": "command", "command": guard_cmd}]})
+    with open(settings_file, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=2, ensure_ascii=False)
+    print("[tt-statusline] 已注册 guard Stop hook")
+else:
+    print("[tt-statusline] guard Stop hook 已存在，跳过")
+PYEOF
+
+# 5. 在 on-prompt-submit.sh 末尾追加 flag 写入（如果尚未存在）
 FLAG_LINE='echo "${SESSION_ID}" > "${HOME}/.claude/tt-new-round.flag" 2>/dev/null || true'
 
 if [[ -f "${HOOK_FILE}" ]]; then
