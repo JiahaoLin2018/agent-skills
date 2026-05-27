@@ -13,6 +13,9 @@
 
 | Skill | 分类 | 子类 | 用途 | 状态 |
 |-------|------|------|------|------|
+| [tt-statusline](./general/tt-statusline/) | general | token 追踪 | Claude Code 状态栏实时显示 token 占用、速率限制、费用等（配置打包，非 slash command） | ✅ |
+| [token-tracker](./general/token-tracker/) | general | token 追踪 | `tt daily/weekly/sessions` 等命令查看历史 token 用量与费用报告（pip 包） | ✅ |
+| [synthesize-prd](./product/synthesize-prd/) | product | PRD 文档 | brainstorming+grill-me 后合成结构化 PRD（双段式 + MySQL DDL + AC），**不推 issue tracker**，mattpocock/to-prd 的本地化替代 | ✅ |
 | [elk](./ops/elk/) | ops | 监控排查 | 自然语言查 ES 日志、traceId 关联追踪、AI 根因诊断 | ✅ |
 | [setup-transfer-clash](./ops/setup-transfer-clash/) | ops | 网络代理 | 一键部署 VPS 代理节点(3x-ui + BBR + 订阅转换) | ✅ |
 
@@ -32,9 +35,9 @@ ln -s ~/agent-skills/ops/setup-transfer-clash ~/.claude/skills/setup-transfer-cl
 
 更新时只需 `cd ~/agent-skills && git pull`,所有软链 skill 同步更新。
 
-### 方式 2:使用 install.sh
+### 方式 2:使用 install.sh（部分 skill 提供）
 
-每个 skill 内置 `install.sh`,会把目录复制到 `~/.claude/skills/<skill-name>/`:
+部分 skill 内置 `install.sh`,会把目录复制到 `~/.claude/skills/<skill-name>/`:
 
 ```bash
 cd ops/elk && bash install.sh
@@ -42,6 +45,8 @@ cd ops/setup-transfer-clash && bash install.sh
 ```
 
 > ⚠️ 复制式安装升级需要重新执行,推荐方式 1。
+>
+> **single-file skill**（如 `product/synthesize-prd`）只有一个 `SKILL.md`,**没有 `install.sh`**,只能用方式 1 软链或手动 `cp`。
 
 ## 目录结构
 
