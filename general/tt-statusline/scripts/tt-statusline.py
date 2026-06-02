@@ -3,7 +3,7 @@
 # __version__ 必须固定为 "1.5"：token-tracker 的 needs_update() 读此字段，
 # 与其内置 HOOK_VERSION("1.5") 不一致时会用自带脚本覆盖本文件（tt daily 等命令触发）。
 __version__ = "1.5"
-import json, os, re, sys, tempfile
+import json, os, re, subprocess, sys, tempfile
 from datetime import datetime, timezone
 
 STATUS_FILE      = os.path.expanduser("~/.claude/tt-status.json")
@@ -96,6 +96,34 @@ def burn_forecast(entry, now_ts, window_sec):
     if exhaust_in >= remain:
         return ("✅ 够用", C["green"])
     return (f"⚠ {fmt_duration(exhaust_in)}", C["red"])
+
+
+def get_git_info(cwd):
+    """返回 (branch, behind, ahead) 或 None（非 git 仓库或超时）。"""
+    if not cwd or not os.path.isdir(cwd):
+        return None
+    try:
+        r = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=cwd, capture_output=True, text=True, timeout=2
+        )
+        if r.returncode != 0:
+            return None
+        branch = r.stdout.strip()
+        if not branch or branch == "HEAD":
+            return branch, 0, 0
+        r2 = subprocess.run(
+            ["git", "rev-list", "--left-right", "--count", "HEAD...@{u}"],
+            cwd=cwd, capture_output=True, text=True, timeout=2
+        )
+        if r2.returncode != 0 or not r2.stdout.strip():
+            return branch, 0, 0
+        parts = r2.stdout.strip().split()
+        ahead  = int(parts[0]) if parts else 0
+        behind = int(parts[1]) if len(parts) > 1 else 0
+        return branch, behind, ahead
+    except Exception:
+        return None
 
 
 def scan_transcript(transcript_path):
@@ -248,6 +276,16 @@ def render(data, now):
     cwd = (data.get("workspace") or {}).get("current_dir", "")
     if cwd:
         line1.append(f"{C['green']}📁 {os.path.basename(cwd)}{C['reset']}")
+
+    git_info = get_git_info(cwd) if cwd else None
+    if git_info:
+        branch, behind, ahead = git_info
+        seg = f"{C['cyan']}⎇ {branch}{C['reset']}"
+        if behind > 0:
+            seg += f" {C['red']}↓{behind}{C['reset']}"
+        if ahead > 0:
+            seg += f" {C['yellow']}↑{ahead}{C['reset']}"
+        line1.append(seg)
 
     # ── Line 2: 5h bar 燃尽预测 重置时刻 │ 7d bar 重置日期 ──
     line2 = []

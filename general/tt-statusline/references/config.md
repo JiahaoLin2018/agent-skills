@@ -3,7 +3,7 @@
 ## 示例效果
 
 ```
-Opus 4.7 (1M context) Max │ ◔33% 334k │ S×2 🔧172 │ 📁 jiahao
+Opus 4.7 (1M context) Max │ ◔33% 334k │ S×2 🔧172 │ 📁 jiahao │ ⎇ main ↓2 ↑1
 5h █████░░░ 63% ✅ 够用 (1h46m · 17:00) │ 7d █░░░░░░░ 12% (4d16h · 05/23 08:00)
 ⏮️ S×0 -- │ ⏯️ S×2 5k │ ⚡329k 99% │ $11.92 3.6/h │ 3h17m
 ```
@@ -20,6 +20,9 @@ Opus 4.7 (1M context) Max │ ◔33% 334k │ S×2 🔧172 │ 📁 jiahao
 | `S×2` | 会话累计 LLM 调用次数 | `tt-round-state.json → session_total` |
 | `🔧172` | 会话累计工具调用次数 | transcript 中 `tool_use` 出现次数 |
 | `📁 jiahao` | 当前工作目录名 | `workspace.current_dir` basename |
+| `⎇ main` | 当前 git 分支名 | `git rev-parse --abbrev-ref HEAD` |
+| `↓2` | 远端有 2 个提交待拉取（红色） | `git rev-list --left-right --count HEAD...@{u}` 右侧值 |
+| `↑1` | 本地有 1 个提交待推送（黄色） | `git rev-list --left-right --count HEAD...@{u}` 左侧值 |
 
 ---
 
@@ -59,6 +62,8 @@ Opus 4.7 (1M context) Max │ ◔33% 334k │ S×2 🔧172 │ 📁 jiahao
 | `⏮️` / `⏯️` | 上一轮 / 当前轮 |
 | `⚡` | 缓存命中 |
 | `📁` | 当前工作目录 |
+| `⎇` | git 分支名 |
+| `↓` / `↑` | 待拉取提交数（红）/ 待推送提交数（黄）|
 | `✅` / `⚠` | 5h 额度够用 / 燃尽预警 |
 
 ---
