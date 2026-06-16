@@ -18,8 +18,11 @@
 | [synthesize-prd](./product/synthesize-prd/) | product | PRD 文档 | brainstorming+grill-me 后合成结构化 PRD（双段式 + MySQL DDL + AC），**不推 issue tracker**，mattpocock/to-prd 的本地化替代 | ✅ |
 | [elk](./ops/elk/) | ops | 监控排查 | 自然语言查 ES 日志、traceId 关联追踪、AI 根因诊断 | ✅ |
 | [setup-transfer-clash](./ops/setup-transfer-clash/) | ops | 网络代理 | 一键部署 VPS 代理节点(3x-ui + BBR + 订阅转换) | ✅ |
+| [tech-stack-setup ↗](https://github.com/JiahaoLin2018/tech-stack-setup) | ops | CI/CD·部署 | FinTech 级多环境隔离微服务基础设施部署方案:Spring Cloud 2025 + Docker Compose + K3s,20+ 个 `setup-*` 服务经 SSH 远程部署。**外部独立 repo,引用收录** | ✅ |
 
 > 📌 后续按 `general / product / frontend / backend / ops` 五大类逐步补充。
+>
+> 标 ↗ 的条目是**外部独立 repo**(不在本仓库目录内),以链接引用方式收录,源码在其自身仓库维护。
 
 ## 安装方式
 
